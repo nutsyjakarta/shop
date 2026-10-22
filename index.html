@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NUTSY</title>
+    
+    <!-- Google Fonts: Inter untuk tampilan modern dan minimalis -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons untuk ikon premium -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Tailwind CSS untuk Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            black: '#000000',
+                            white: '#FFFFFF',
+                            blue: '#0038DE',
+                            gray50: '#F5F5F5',
+                            gray500: '#777777',
+                            border: '#E5E5E5'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* CSS Tambahan untuk interaksi halus */
+        html { scroll-behavior: smooth; }
+        body { -webkit-font-smoothing: antialiased; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Style untuk opsi ukuran/warna yang dipilih */
+        .variant-btn.selected {
+            border-color: #000;
+            background-color: #000;
+            color: #fff;
+        }
+        
+        /* Animasi Marquee / Teks Berjalan */
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 15s linear infinite;
+        }
+
+        /* --- FITUR BARU: ANIMASI BORDER POPUP --- */
+        @keyframes rotateBorder {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .animated-border-frame {
+            position: relative;
+            overflow: hidden;
+            padding: 7px; /* Ketebalan border animasi */
+            border-radius: 0.75rem; 
+        }
+        .animated-border-frame::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            /* Gradient memutar warna #0038DE */
+            background: conic-gradient(from 0deg, transparent 0deg, #0038DE 90deg, transparent 180deg, #0038DE 270deg, transparent 360deg);
+            animation: rotateBorder 2s linear infinite;
+            z-index: 0;
+        }
+        .animated-border-content {
+            position: relative;
+            z-index: 1;
+            background-color: #ffffff;
+            border-radius: 0.6rem; 
+            overflow: hidden;
+            width: 100%;
+            height: 70%;
+        }
+
+        /* Carousel scroll snap */
+        .carousel-snap {
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+        }
+        .carousel-snap > img {
+            scroll-snap-align: start;
+        }
+    </style>
+</head>
+<body class="bg-brand-white text-brand-black font-sans selection:bg-brand-black selection:text-brand-white">
+
+    <script>
+        /**
+         * ========================================================
+         * PUSAT DATA WEBSITE (EDIT DI SINI)
+         * ========================================================
+         */
+
+        // 1. KONFIGURASI BRAND
+        const CONFIG = {
+            brandName: "NUTSY",
+            logoText: "NUTSY", 
+            tagline: "",
+            description: "NUTSY is about the things that keep going, even when everything else changes. The ideas, the memories, the people, and the culture that shape who we are. Every piece carries a part of that journey. We keep evolving, staying true to who we are, and moving forward in our own way. No matter how things change, we keep our spirit alive, We're here to be part of something that continues.",
+            whatsapp: "6283842361721", 
+            instagram: "nutsy.jakarta",
+            email: "nutsy.jakarta06@gmail.com",
+            shopee: "https://shopee.co.id/nutsy.jakarta", // Ganti dengan link toko Shopee Anda
+            
+            address: "JAKARTA, INDONESIA",
+            mapsLink: "https://maps.app.goo.gl/P2bX7k7hM8vN4nBz5",
+            
+            // --- FITUR BARU: Gambar Hero Slider Pisah HP & Laptop ---
+            // Gambar khusus untuk tampilan HP (Potrait/Square)
+            heroImagesMobile: [
+                "https://i.imgur.com/tEV6ps9.jpeg",
+                "https://i.imgur.com/CduucB9.png",
+                "https://i.imgur.com/68MZEAW.jpeg"
+            ],
+            
+            // Gambar khusus untuk tampilan Laptop/Tablet (Landscape)
+            // Silakan ganti link di bawah dengan gambar beresolusi lebar untuk desktop
+            heroImagesDesktop: [
+                "https://i.imgur.com/ey0C6aA.jpeg",
+                "https://i.imgur.com/zzQlqrE.jpeg",
+                "https://i.imgur.com/tEV6ps9.jpeg" // Contoh: Gunakan versi landscape
+            ]
+        };
+
+        // 2. DATA KATEGORI
+        const CATEGORIES = [
+            { id: "all", name: "All Products" },
+            { id: "tshirt", name: "T-Shirt" },
+            { id: "cap", name: "Cap" },
+            { id: "accs", name: "Accs" },
+        ];
+
+        // 3. DATA PRODUK DENGAN DUKUNGAN STOK VARIAN (WARNA + UKURAN)
+        const PRODUCTS = [
+            {
+                id: "PRD-007",
+                name: "Tribal Burst Piece",
+                category: "tshirt",
+                price: 180000,
+                salePrice: null,
+                description: "",
+                images: [
+                    "https://i.imgur.com/wPnVTJB.jpeg",
+                    "https://i.imgur.com/27k5aZL.jpeg",
+                    "https://i.imgur.com/eBAzQCo.jpeg",
+                    "https://i.imgur.com/0M6zKge.jpeg",
+                    "https://i.imgur.com/mfabB06.png"
+                ],
+                sizes: ["M", "L", "XL", "XXL"],
+                colors: ["White", "Black"],
+                variantStock: {
+                    "White-M": 0, "White-L": 0, "White-XL": 0, "White-XXL": 0,
+                    "Black-M": 0, "Black-L": 0, "Black-XL": 0, "Black-XXL": 0
+                },
+                sku: "TN7",
+                isNew: false,
+                isReady: false
+            },
+            {
+                id: "PRD-006",
+                name: "Skull Bones Steel",
+                category: "tshirt",
+                price: 180000,
+                salePrice: null,
+                description: "",
+                images: [
+                    "https://i.imgur.com/RxgvHa1.jpeg",
+                    "https://i.imgur.com/vp2Dx2u.jpeg",
+                    "https://i.imgur.com/JSVLm49.png"
+                ],
+                sizes: ["M", "L", "XL", "XXL"],
+                colors: ["White"],
+                variantStock: {
+                    "White-M": 0, "White-L": 0, "White-XL": 0, "White-XXL": 0
+                },
+                sku: "TN7",
+                isNew: false,
+                isReady: false
+            },
+            {
+                id: "PRD-005",
+                name: "Hustle Bustle",
+                category: "tshirt",
+                price: 180000,
+                salePrice: null,
+                description: "",
+                images: [
+                    "https://i.imgur.com/75F5r0P.jpeg",
+                    "https://i.imgur.com/JSVLm49.png"
+                ],
+                sizes: ["M", "L", "XL", "XXL"],
+                colors: ["Black"],
+                variantStock: {
+                    "Black-M": 0, "Black-L": 0, "Black-XL": 0, "Black-XXL": 0
+                },
+                sku: "TN5",
+                isNew: false,
+                isReady: false
+            },
+            {
+                id: "PRD-004",
+                name: "All The Problem",
+                category: "tshirt",
+                price: 180000,
+                salePrice: null,
+                description: "",
+                images: [
+                    "https://i.imgur.com/j8tDXaZ.jpeg",
+                    "https://i.imgur.com/wVOhNna.png"
+                ],
+                sizes: ["M", "L", "XL", "XXL"],
+                colors: ["White"],
+                variantStock: {
+                    "White-M": 0, "White-L": 0, "White-XL": 0, "White-XXL": 0
+                },
+                sku: "TN4",
+                isNew: false,
+                isReady: false
+            },
+            {
+                id: "PRD-003",
+                name: "Support Your Homies",
+                category: "tshirt",
+                price: 180000,
+                salePrice: null,
+                description: "",
+                images: [
+                    "https://i.imgur.com/yAamFgY.jpeg",
+                    "https://i.imgur.com/E6oUWld.jpeg",
+                    "https://i.imgur.com/M9nD3bn.png"
+                ],
+                sizes: ["M", "L", "XL", "XXL"],
+                colors: ["Black"],
+                variantStock: {
+                    "Black-M": 0, "Black-L": 0, "Black-XL": 0, "Black-XXL": 0
+                },
+                sku: "TN3",
+                isNew: false,
+                isReady: false
+            },
+            {
+                id: "PRD-002",
+                name: "Throw A Blast",
+                category: "tshirt",
+                price: 180000,
+                salePrice: null,
+                description: "",
+                images: [
+                    "https://i.imgur.com/coNi1qe.jpeg",
+                    "https://i.imgur.com/lcArhpv.png"
+                ],
+                sizes: ["M", "L", "XL", "XXL"],
+                colors: ["Black"],
+                variantStock: {
+                    "Black-M": 0, "Black-L": 0, "Black-XL": 0, "Black-XXL": 0
+                },
+                sku: "TN2",
+                isNew: false,
+                isReady: false
+            },
+            {
+                id: "PRD-001-TSHIRT",
+                name: "Soul And Pain",
+                category: "tshirt",
+                price: 180000,
+                salePrice: null,
+                description: "",
+                images: [
+                    "https://i.imgur.com/IMpMSUy.jpeg",
+                    "https://i.imgur.com/hfiptLK.jpeg",
+                    "https://i.imgur.com/MZptMk8.jpeg",
+                    "https://i.imgur.com/rNZhgrU.jpeg",
+                    "https://i.imgur.com/KEu4tR1.png"
+                ],
+                sizes: ["M", "L", "XL", "XXL"],
+                colors: ["White", "Black"],
+                variantStock: {
+                    "White-M": 1, "White-L": 2, "White-XL":0, "White-XXL": 0,
+                    "Black-M": 0, "Black-L": 0, "Black-XL": 1, "Black-XXL": 0
+                },
+                sku: "TN1",
+                isNew: false,
+                isReady: true
+            },
+            {
+                id: "PRD-001-CAP",
+                name: "Logo Cap",
+                category: "cap",
+                price: 150000,
+                salePrice: null,
+                description: "",
+                images: [
+                    "https://i.imgur.com/OA90CQT.jpeg",
+                    "https://i.imgur.com/RO8dt6v.jpeg"
+                ],
+                sizes: ["All Size"],
+                colors: ["Black"],
+                variantStock: {
+                    "Black-All Size": 5
+                },
+                sku: "HN1",
+                isNew: false,
+                isReady: true
+            },
+            {
+                id: "PRD-001-ACCS",
+                name: "Pipokun Keychain",
+                category: "accs",
+                price: 30000,
+                salePrice: null,
+                description: "",
+                images: [
+                    "https://i.imgur.com/U2stXNc.jpeg"
+                ],
+                sizes: ["All Size"],
+                colors: ["Yellow"],
+                variantStock: {
+                    "Yellow-All Size": 0
+                },
+                sku: "AN1",
+                isNew: false,
+                isReady: false
+            }
+        ];
+    </script>
+
+    <!-- PROMO POPUP (IKLAN PRODUK BARU) -->
+    <div id="promo-popup" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 hidden opacity-0 transition-opacity duration-500 backdrop-blur-sm px-4">
+        <div class="animated-border-frame w-full max-w-[320px] sm:max-w-sm fade-in">
+            <div class="animated-border-content flex flex-col relative">
+                <!-- Tombol Close -->
+                <button onclick="closePromoPopup()" class="absolute top-3 right-3 z-20 w-8 h-8 flex items-center justify-center bg-black/40 text-white rounded-full hover:bg-black transition-colors backdrop-blur-md">
+                    <i class="ph ph-x text-lg"></i>
+                </button>
+                
+                <!-- Header Iklan -->
+                <div class="p-3 text-center bg-brand-white border-b border-brand-border z-10">
+                    <h3 class="font-bold text-sm sm:text-base tracking-[0.2em] text-brand-blue uppercase">New Arrival</h3>
+                </div>
+                
+                <!-- Area Slider Gambar -->
+                <div id="promo-slider-container" class="relative w-full aspect-[4/5] bg-brand-gray50 cursor-pointer group" onclick="goToPromoDetail()">
+                    <!-- Gambar disuntikkan via JS -->
+                </div>
+                
+                <!-- Info Produk -->
+                <div id="promo-info" class="p-4 text-center bg-brand-white cursor-pointer hover:bg-brand-gray50 transition-colors z-10" onclick="goToPromoDetail()">
+                    <!-- Info disuntikkan via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="fixed top-0 left-0 right-0 bg-brand-white/90 backdrop-blur-md border-b border-brand-border z-50 transition-all duration-300">
+        
+        <!-- Header Marquee -->
+        <div class="w-full bg-brand-blue text-brand-white overflow-hidden py-2 flex items-center">
+            <div class="animate-marquee font-bold text-xs tracking-[0.2em]">
+                FEEL THE FLOW &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WILL BE RELEASED SOON! &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FEEL THE FLOW &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WILL BE RELEASED SOON! &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FEEL THE FLOW &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WILL BE RELEASED SOON! &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FEEL THE FLOW &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WILL BE RELEASED SOON!
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Mobile Menu Button -->
+                <button onclick="toggleMobileMenu()" class="md:hidden p-2 text-brand-black">
+                    <i class="ph ph-list text-2xl"></i>
+                </button>
+
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="navigate('home')">
+                    <img src="https://i.imgur.com/2hCy9Vg.png" alt="Logo Brand" class="h-14 w-auto">
+                </div>
+
+                <!-- Desktop Nav -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#" onclick="navigate('home')" class="text-sm font-medium hover:text-brand-gray500 transition-colors">Home</a>
+                    <a href="#" onclick="navigate('catalog')" class="text-sm font-medium hover:text-brand-gray500 transition-colors">All Products</a>
+                    <a href="#" onclick="navigate('about')" class="text-sm font-medium hover:text-brand-gray500 transition-colors">About Nutsy</a>
+                </nav>
+
+                <!-- Icons (Search & WA) -->
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleSearch()" class="p-2 text-brand-black hover:text-brand-gray500 transition-colors">
+                        <i class="ph ph-magnifying-glass text-xl"></i>
+                    </button>
+                    <a id="ui-header-wa" href="#" target="_blank" class="hidden sm:flex items-center justify-center bg-brand-black text-brand-white px-4 py-2 text-sm font-medium hover:bg-brand-blue transition-colors">
+                        <i class="ph-fill ph-whatsapp-logo mr-2 text-lg"></i> Message
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-brand-white border-b border-brand-border absolute w-full">
+            <div class="px-4 pt-2 pb-6 space-y-1">
+                <a href="#" onclick="navigate('home'); toggleMobileMenu()" class="block px-3 py-3 text-base font-medium border-b border-brand-border">Home</a>
+                <a href="#" onclick="navigate('catalog'); toggleMobileMenu()" class="block px-3 py-3 text-base font-medium border-b border-brand-border">Product Catalog</a>
+                <a href="#" onclick="navigate('about'); toggleMobileMenu()" class="block px-3 py-3 text-base font-medium border-b border-brand-border">About Nutsy</a>
+                <a id="ui-mobile-wa" href="#" target="_blank" class="block mt-4 px-3 py-3 bg-brand-black text-brand-white text-center font-medium hover:bg-brand-blue transition-colors">
+                    <i class="ph-fill ph-whatsapp-logo mr-2"></i> Contact WhatsApp
+                </a>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div id="search-bar" class="hidden bg-brand-white border-b border-brand-border p-4 absolute w-full left-0 top-24 shadow-lg">
+            <div class="max-w-3xl mx-auto flex items-center relative">
+                <i class="ph ph-magnifying-glass absolute left-4 text-brand-gray500 text-xl"></i>
+                <input type="text" id="searchInput" placeholder="Search products (e.g., Oversized, Hoodie)..." 
+                       class="w-full pl-12 pr-4 py-3 bg-brand-gray50 border-none outline-none focus:ring-1 focus:ring-brand-black text-sm"
+                       onkeyup="handleSearch(event)">
+                <button onclick="toggleSearch()" class="absolute right-4 text-brand-gray500 hover:text-brand-black">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- PAGE: HOME -->
+    <main id="page-home" class="pt-24 pb-20 block fade-in">
+        <!-- Hero Section -->
+        <section class="relative h-[80vh] min-h-[500px] w-full bg-brand-black flex items-center justify-center overflow-hidden">
+            
+            <!-- Hero Slider Container -->
+            <div id="hero-slider-container" class="absolute inset-0 w-full h-full bg-brand-black">
+                <!-- Gambar disuntikkan via javascript -->
+            </div>
+
+            <!-- Gradient Overlay for text readability -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10"></div>
+            
+            <div class="relative z-10 text-center px-4 max-w-3xl mx-auto mt-20">
+                <p id="ui-hero-tagline" class="text-white/90 text-sm md:text-base tracking-[0.2em] uppercase mb-4 font-medium"></p>
+                <h2 class="text-4xl md:text-6xl font-bold text-white mb-8 tracking-tight leading-tight">
+                    STILL <br class="hidden md:block">GOING ON
+                </h2>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button onclick="navigate('catalog')" class="w-full sm:w-auto bg-white text-black px-8 py-4 text-sm font-bold uppercase tracking-wider hover:bg-gray-200 transition-colors">
+                        Explore Collection
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Categories -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+            <div class="flex justify-between items-end mb-8">
+                <h3 class="text-2xl font-bold tracking-tight">Categories</h3>
+                <a href="#" onclick="navigate('catalog')" class="text-sm font-medium underline underline-offset-4 hover:text-brand-gray500">View All</a>
+            </div>
+            <div id="home-categories" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                <!-- Kategori di-render oleh JS -->
+            </div>
+        </section>
+
+        <!-- New Arrivals -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-brand-border">
+            <h3 class="text-2xl font-bold tracking-tight mb-8 text-center">AVAILABLE</h3>
+            <div id="home-new-arrivals" class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-6">
+                <!-- Produk di-render oleh JS -->
+            </div>
+        </section>
+    </main>
+
+    <!-- PAGE: CATALOG -->
+    <main id="page-catalog" class="pt-32 pb-20 hidden fade-in min-h-screen">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold tracking-tight mb-2">Product Catalog</h2>
+            <p class="text-brand-gray500 text-sm mb-8" id="catalog-subtitle">Showing all our collections.</p>
+
+            <div class="flex mb-8 pb-4 border-b border-brand-border">
+                <div class="w-full overflow-x-auto hide-scroll pb-2 md:pb-0">
+                    <div id="catalog-categories" class="flex space-x-2 md:space-x-4 min-w-max">
+                        <!-- Kategori Filter -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="catalog-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-6">
+                <!-- Produk di-render JS -->
+            </div>
+            
+            <div id="catalog-empty" class="hidden text-center py-20">
+                <i class="ph ph-package text-6xl text-brand-gray500 mb-4"></i>
+                <h3 class="text-xl font-medium mb-2">Product not found</h3>
+                <p class="text-brand-gray500 mb-6">Try changing your search keywords or category filters.</p>
+                <button onclick="resetFilters()" class="border border-brand-black px-6 py-2 text-sm font-medium hover:bg-brand-black hover:text-white transition-colors">Reset Filters</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- PAGE: PRODUCT DETAIL -->
+    <main id="page-detail" class="pt-32 pb-24 hidden fade-in min-h-screen">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav class="flex text-sm text-brand-gray500 mb-8" aria-label="Breadcrumb">
+                <a href="#" onclick="navigate('home')" class="hover:text-brand-black">Home</a>
+                <span class="mx-2">/</span>
+                <a href="#" onclick="navigate('catalog')" class="hover:text-brand-black">Catalog</a>
+                <span class="mx-2">/</span>
+                <span id="detail-breadcrumb" class="text-brand-black truncate">Product</span>
+            </nav>
+
+            <div class="lg:grid lg:grid-cols-2 lg:gap-x-12 xl:gap-x-16">
+                <div class="flex flex-col-reverse lg:flex-row gap-4 mb-10 lg:mb-0">
+                    <div id="detail-thumbnails" class="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible hide-scroll w-full lg:w-20 shrink-0">
+                        <!-- Thumbnails -->
+                    </div>
+                    <div class="w-full aspect-[4/5] bg-brand-gray50 relative overflow-hidden group">
+                        <img id="detail-main-img" src="" alt="Product" class="w-full h-full object-cover object-center">
+                        <div id="detail-badges" class="absolute top-4 left-4 flex flex-col gap-2">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col mt-4 lg:mt-0">
+                    <h1 id="detail-name" class="text-2xl sm:text-3xl font-bold tracking-tight text-brand-black mb-2">Product Name</h1>
+                    
+                    <div class="flex items-center space-x-3 mb-6">
+                        <p id="detail-price" class="text-xl font-medium text-brand-black">Rp 0</p>
+                        <p id="detail-sale-price" class="text-sm text-brand-gray500 line-through hidden">Rp 0</p>
+                    </div>
+
+                    <p id="detail-desc" class="text-sm sm:text-base text-brand-gray500 mb-8 leading-relaxed">Product description</p>
+
+                    <div class="space-y-6 mb-8 border-y border-brand-border py-6">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-sm font-medium text-brand-black">Color</h3>
+                                <span id="selected-color-text" class="text-xs text-brand-gray500">Select Color</span>
+                            </div>
+                            <div id="detail-colors" class="flex flex-wrap gap-3">
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-sm font-medium text-brand-black">Size</h3>
+                                <a href="#" class="text-xs text-brand-gray500 underline">Size Guide</a>
+                            </div>
+                            <div id="detail-sizes" class="flex flex-wrap gap-3">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-sm text-brand-gray500 space-y-2 mb-8">
+                        <p>Availability: <span id="detail-stock" class="font-medium text-brand-black">In Stock</span></p>
+                        <p>SKU: <span id="detail-sku" class="text-brand-black uppercase">SKU</span></p>
+                    </div>
+
+                    <button id="btn-buy-wa" onclick="orderViaWA()" class="w-full bg-brand-black text-white py-4 flex justify-center items-center gap-2 hover:bg-brand-gray500 transition-colors font-medium">
+                        <i class="ph-fill ph-whatsapp-logo text-xl"></i> Order via WhatsApp
+                    </button>
+                    <p class="text-xs text-center text-brand-gray500 mt-3">Payment and shipping will be assisted by our team.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- PAGE: ABOUT -->
+    <main id="page-about" class="pt-32 pb-20 hidden fade-in min-h-screen">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+            <h2 class="text-3xl font-bold tracking-tight mb-6">About <span id="ui-about-name">Nutsy</span></h2>
+            <div class="w-16 h-1 bg-brand-black mx-auto mb-8"></div>
+            <p id="ui-about-desc" class="text-lg text-brand-gray500 leading-relaxed mb-10">
+                Description
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 py-10 border-t border-brand-border">
+                <div>
+                    <i class="ph ph-scissors text-3xl mb-3"></i>
+                    <h3 class="font-medium mb-2">Precision Cut</h3>
+                    <p class="text-sm text-brand-gray500">Every pattern is designed for the best silhouette on your body.</p>
+                </div>
+                <div>
+                    <i class="ph ph-t-shirt text-3xl mb-3"></i>
+                    <h3 class="font-medium mb-2">Premium Materials</h3>
+                    <p class="text-sm text-brand-gray500">We only use selected materials for maximum comfort.</p>
+                </div>
+                <div>
+                    <i class="ph ph-leaf text-3xl mb-3"></i>
+                    <h3 class="font-medium mb-2">Minimalist Approach</h3>
+                    <p class="text-sm text-brand-gray500">Timeless style that never fades.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-brand-black text-brand-white pt-16 pb-8 border-t border-brand-black">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Grid Diperbaiki untuk Presisi Responsif (HP, Tablet, Laptop) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-12">
+                
+                <!-- Kolom 1: Brand Info -->
+                <div class="col-span-1 sm:col-span-2 lg:col-span-1">
+                    <img src="https://i.imgur.com/2hCy9Vg.png" alt="Logo Brand" class="h-14 w-auto mb-6">
+                    <p id="ui-footer-desc" class="text-brand-gray500 text-sm leading-relaxed mb-6 pr-4">Description</p>
+                </div>
+                
+                <!-- Kolom 2: Lokasi -->
+                <div>
+                    <h3 class="font-bold text-sm tracking-widest uppercase mb-5">Our Location</h3>
+                    <a id="ui-footer-maps-link" href="#" target="_blank" class="group flex items-start text-sm text-brand-gray500 hover:text-white transition-colors leading-relaxed">
+                        <i class="ph-fill ph-map-pin mr-3 text-xl mt-0.5 group-hover:text-white shrink-0"></i>
+                        <span id="ui-footer-address">Store Address</span>
+                    </a>
+                </div>
+
+                <!-- Kolom 3: Sosial Media & Marketplace (TERMASUK SHOPEE) -->
+                <div>
+                    <h3 class="font-bold text-sm tracking-widest uppercase mb-5">Find Us</h3>
+                    <ul class="space-y-4">
+                        <li>
+                            <a id="ui-footer-ig" href="#" target="_blank" class="flex items-center text-sm text-brand-gray500 hover:text-white transition-colors">
+                                <i class="ph-fill ph-instagram-logo text-xl mr-3"></i> Instagram
+                            </a>
+                        </li>
+                        <li>
+                            <a id="ui-footer-shopee" href="#" target="_blank" class="flex items-center text-sm text-brand-gray500 hover:text-white transition-colors">
+                                <i class="ph-fill ph-shopping-bag text-xl mr-3"></i> Shopee
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Kolom 4: Bantuan / Kontak -->
+                <div>
+                    <h3 class="font-bold text-sm tracking-widest uppercase mb-5">Help & Contact</h3>
+                    <ul class="space-y-4 text-sm text-brand-gray500">
+                        <li>
+                            <a id="ui-footer-wa-icon" href="#" target="_blank" class="flex items-center text-brand-gray500 hover:text-white transition-colors">
+                                <i class="ph-fill ph-whatsapp-logo text-xl mr-3"></i> Our WhatsApp
+                            </a>
+                        </li>
+                        <li>
+                            <a id="ui-footer-email" href="#" class="flex items-center text-brand-gray500 hover:text-white transition-colors break-all">
+                                <i class="ph-fill ph-envelope-simple text-xl mr-3 shrink-0"></i> 
+                                <span id="ui-footer-email-text">Email</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Hak Cipta -->
+            <div class="pt-8 border-t border-brand-gray500/30 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+                <p class="text-xs text-brand-gray500">&copy; <span id="current-year"></span> <span id="ui-copyright-name">Nutsy</span>. All rights reserved.</p>
+                <p class="text-xs text-brand-gray500">Still Going On.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        /**
+         * ========================================================
+         * ENGINE WEBSITE
+         * ========================================================
+         */
+
+        // State Management
+        let currentCategory = 'all';
+        let searchQuery = '';
+        let selectedProduct = null;
+        let userSelection = { size: null, color: null };
+        let heroSliderInterval = null;
+
+        // Variabel untuk Popup Iklan
+        let promoInterval = null;
+        let currentPromoIndex = 0;
+        let promoProducts = [];
+
+        // Utilities
+        const formatRupiah = (number) => {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+        };
+        const getWALink = (text) => `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
+
+        // Helper hitung total stok dari ketersediaan varian
+        function getProductTotalStock(product) {
+            if (product.variantStock) {
+                return Object.values(product.variantStock).reduce((acc, curr) => acc + (parseInt(curr) || 0), 0);
+            }
+            return product.stock || 0;
+        }
+
+        // Inisialisasi Website
+        function initApp() {
+            document.title = CONFIG.brandName;
+            
+            document.getElementById('ui-hero-tagline').innerText = CONFIG.tagline;
+            document.getElementById('ui-about-name').innerText = CONFIG.brandName;
+            document.getElementById('ui-about-desc').innerText = CONFIG.description;
+            document.getElementById('ui-footer-desc').innerText = CONFIG.description;
+            document.getElementById('ui-copyright-name').innerText = CONFIG.brandName;
+            document.getElementById('current-year').innerText = new Date().getFullYear();
+            
+            const waLink = getWALink(`Hello ${CONFIG.brandName} admin, I have a question about a product on the website.`);
+            document.getElementById('ui-header-wa').href = waLink;
+            document.getElementById('ui-mobile-wa').href = waLink;
+            document.getElementById('ui-footer-wa-icon').href = waLink;
+            document.getElementById('ui-footer-ig').href = `https://instagram.com/${CONFIG.instagram}`;
+            
+            document.getElementById('ui-footer-email').href = `mailto:${CONFIG.email}`;
+            document.getElementById('ui-footer-email-text').innerText = CONFIG.email;
+            
+            // --- SET SHOPEE LINK ---
+            document.getElementById('ui-footer-shopee').href = CONFIG.shopee;
+            
+            // Set Maps Address
+            document.getElementById('ui-footer-address').innerText = CONFIG.address;
+            document.getElementById('ui-footer-maps-link').href = CONFIG.mapsLink;
+
+            initHeroSlider();
+            renderHome();
+            renderCatalogFilters();
+            
+            const hash = window.location.hash.replace('#', '');
+            if(hash === 'catalog') navigate('catalog');
+            else if(hash === 'about') navigate('about');
+            else navigate('home');
+
+            // --- JALANKAN POPUP IKLAN DENGAN JEDA WAKTU ---
+            setTimeout(initPromoPopup, 1000); // Muncul 1 detik setelah web dimuat
+        }
+
+        // --- SISTEM POPUP IKLAN PRODUK BARU ---
+        function initPromoPopup() {
+            // Ambil semua produk yang diatur sebagai barang baru (isNew: true)
+            promoProducts = PRODUCTS.filter(p => p.isNew === true);
+            
+            // Jika tidak ada barang baru, batalkan popup
+            if (promoProducts.length === 0) return;
+
+            const popup = document.getElementById('promo-popup');
+            popup.classList.remove('hidden');
+            
+            // Beri sedikit jeda agar transisi CSS berjalan mulus
+            setTimeout(() => {
+                popup.classList.remove('opacity-0');
+            }, 50);
+
+            // Render gambar pertama
+            renderPromoSlide();
+
+            // Jika barang baru lebih dari 1, jalankan slider otomatis
+            if (promoProducts.length > 1) {
+                promoInterval = setInterval(() => {
+                    currentPromoIndex = (currentPromoIndex + 1) % promoProducts.length;
+                    renderPromoSlide();
+                }, 3000); // Ganti slide otomatis tiap 3 detik
+            }
+        }
+
+        function renderPromoSlide() {
+            const product = promoProducts[currentPromoIndex];
+            if(!product) return;
+            
+            const container = document.getElementById('promo-slider-container');
+            const info = document.getElementById('promo-info');
+            
+            // Support Carousel Slides dengan Touch/Swipe pada Promo Popup
+            const images = product.images || [];
+            let carouselHTML = `<div class="w-full h-full flex overflow-x-auto carousel-snap hide-scroll" onscroll="handleCarouselScroll(this, '${product.id}-promo-dots')">`;
+            images.forEach((img) => {
+                carouselHTML += `<img src="${img}" class="w-full h-full object-cover object-center flex-shrink-0" alt="${product.name}">`;
+            });
+            carouselHTML += `</div>`;
+
+            let dotsHTML = '';
+            if (images.length > 1) {
+                dotsHTML = `<div id="${product.id}-promo-dots" class="absolute bottom-3 left-0 right-0 z-20 flex justify-center gap-1.5 pointer-events-none">`;
+                images.forEach((_, idx) => {
+                    dotsHTML += `<span class="w-2 h-2 rounded-full transition-all duration-300 ${idx === 0 ? 'bg-white w-4' : 'bg-white/50'}"></span>`;
+                });
+                dotsHTML += `</div>`;
+            }
+
+            container.innerHTML = `
+                ${carouselHTML}
+                ${dotsHTML}
+                <div class="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center z-10 pointer-events-none">
+                    <span class="bg-brand-blue text-white px-6 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-y-4 group-hover:translate-y-0 duration-300">Shop Now</span>
+                </div>
+            `;
+            
+            // Render Info Harga & Nama
+            const currentPrice = product.salePrice ? product.salePrice : product.price;
+            info.innerHTML = `
+                <h4 class="font-medium text-brand-black mb-1 line-clamp-1 fade-in">${product.name}</h4>
+                <p class="text-brand-gray500 text-sm font-medium fade-in">${formatRupiah(currentPrice)}</p>
+            `;
+        }
+
+        function closePromoPopup() {
+            const popup = document.getElementById('promo-popup');
+            popup.classList.add('opacity-0');
+            
+            // Bersihkan interval agar slider berhenti berjalan di background
+            if(promoInterval) {
+                clearInterval(promoInterval);
+                promoInterval = null;
+            }
+            
+            // Tunggu animasi fade out selesai baru hilangkan dari DOM
+            setTimeout(() => {
+                popup.classList.add('hidden');
+            }, 500);
+        }
+
+        function goToPromoDetail() {
+            const product = promoProducts[currentPromoIndex];
+            closePromoPopup();
+            if(product) {
+                // Arahkan ke halaman detail produk
+                navigate('detail', product.id);
+            }
+        }
+
+        // --- SISTEM HERO SLIDER (PISAH HP & LAPTOP) ---
+        function initHeroSlider() {
+            const container = document.getElementById('hero-slider-container');
+            const imagesMobile = CONFIG.heroImagesMobile || [];
+            const imagesDesktop = CONFIG.heroImagesDesktop || [];
+            
+            if (imagesMobile.length === 0 && imagesDesktop.length === 0) return;
+
+            let htmlContent = '';
+
+            // Render Gambar Mobile (Muncul di HP, hilang di Desktop/Tablet)
+            imagesMobile.forEach((img, index) => {
+                htmlContent += `
+                    <img src="${img}" 
+                         id="hero-img-mobile-${index}" 
+                         class="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 ease-in-out md:hidden ${index === 0 ? 'opacity-90' : 'opacity-0'}" 
+                         alt="Hero Mobile ${index + 1}">
+                `;
+            });
+
+            // Render Gambar Desktop (Hilang di HP, muncul di Desktop/Tablet)
+            imagesDesktop.forEach((img, index) => {
+                htmlContent += `
+                    <img src="${img}" 
+                         id="hero-img-desktop-${index}" 
+                         class="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 ease-in-out hidden md:block ${index === 0 ? 'opacity-90' : 'opacity-0'}" 
+                         alt="Hero Desktop ${index + 1}">
+                `;
+            });
+
+            container.innerHTML = htmlContent;
+
+            // Jalankan Slider Paralel
+            const maxImages = Math.max(imagesMobile.length, imagesDesktop.length);
+            
+            if (maxImages > 1) {
+                let currentMobile = 0;
+                let currentDesktop = 0;
+                
+                if (heroSliderInterval) clearInterval(heroSliderInterval);
+                
+                heroSliderInterval = setInterval(() => {
+                    // Animasi HP
+                    if (imagesMobile.length > 1) {
+                        const prevMobile = currentMobile;
+                        currentMobile = (currentMobile + 1) % imagesMobile.length;
+                        document.getElementById(`hero-img-mobile-${prevMobile}`).classList.replace('opacity-90', 'opacity-0');
+                        document.getElementById(`hero-img-mobile-${currentMobile}`).classList.replace('opacity-0', 'opacity-90');
+                    }
+                    
+                    // Animasi Desktop
+                    if (imagesDesktop.length > 1) {
+                        const prevDesktop = currentDesktop;
+                        currentDesktop = (currentDesktop + 1) % imagesDesktop.length;
+                        document.getElementById(`hero-img-desktop-${prevDesktop}`).classList.replace('opacity-90', 'opacity-0');
+                        document.getElementById(`hero-img-desktop-${currentDesktop}`).classList.replace('opacity-0', 'opacity-90');
+                    }
+                }, 4000); 
+            }
+        }
+
+        // --- SISTEM ROUTING ---
+        function navigate(page, productId = null) {
+            document.getElementById('page-home').classList.add('hidden');
+            document.getElementById('page-catalog').classList.add('hidden');
+            document.getElementById('page-detail').classList.add('hidden');
+            document.getElementById('page-about').classList.add('hidden');
+            
+            window.scrollTo(0, 0);
+
+            if (page === 'home') {
+                document.getElementById('page-home').classList.remove('hidden');
+                history.pushState(null, null, '#');
+            } else if (page === 'catalog') {
+                document.getElementById('page-catalog').classList.remove('hidden');
+                applyFilters();
+                history.pushState(null, null, '#catalog');
+            } else if (page === 'about') {
+                document.getElementById('page-about').classList.remove('hidden');
+                history.pushState(null, null, '#about');
+            } else if (page === 'detail' && productId) {
+                document.getElementById('page-detail').classList.remove('hidden');
+                loadProductDetail(productId);
+            }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        function toggleSearch() {
+            const bar = document.getElementById('search-bar');
+            bar.classList.toggle('hidden');
+            if(!bar.classList.contains('hidden')) {
+                document.getElementById('searchInput').focus();
+            }
+        }
+
+        function handleSearch(e) {
+            searchQuery = e.target.value.toLowerCase();
+            if (e.key === 'Enter') {
+                toggleSearch();
+                navigate('catalog');
+            } else if (!document.getElementById('page-catalog').classList.contains('hidden')) {
+                applyFilters();
+            }
+        }
+
+        // Fitur Carousel Touch & Dots Indicator
+        function handleCarouselScroll(el, dotsId) {
+            const dotsContainer = document.getElementById(dotsId);
+            if (!dotsContainer) return;
+            const dots = dotsContainer.querySelectorAll('span');
+            if (!dots.length) return;
+
+            const scrollPosition = el.scrollLeft;
+            const slideWidth = el.clientWidth;
+            const activeIndex = Math.round(scrollPosition / slideWidth);
+
+            dots.forEach((dot, index) => {
+                if (index === activeIndex) {
+                    dot.className = "w-4 h-2 bg-white rounded-full transition-all duration-300";
+                } else {
+                    dot.className = "w-2 h-2 bg-white/50 rounded-full transition-all duration-300";
+                }
+            });
+        }
+
+        function createProductCard(product) {
+            const totalStock = getProductTotalStock(product);
+            const isSoldOut = totalStock <= 0;
+            const hasSale = product.salePrice !== null && product.salePrice < product.price;
+            const currentPrice = hasSale ? product.salePrice : product.price;
+            
+            let badgesHTML = '';
+            if (isSoldOut) badgesHTML += `<span class="bg-brand-black text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider">Sold Out</span>`;
+            else if (hasSale) badgesHTML += `<span class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider">Sale</span>`;
+            else if (product.isNew) badgesHTML += `<span class="bg-brand-white text-brand-black border border-brand-black text-[10px] font-bold px-2 py-1 uppercase tracking-wider">New</span>`;
+            else if (product.isReady) badgesHTML += `<span class="bg-brand-blue text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider">Ready</span>`;
+
+            const priceHTML = hasSale 
+                ? `<div class="flex items-center space-x-2"><span class="font-medium">${formatRupiah(currentPrice)}</span><span class="text-xs text-brand-gray500 line-through">${formatRupiah(product.price)}</span></div>`
+                : `<div class="font-medium">${formatRupiah(currentPrice)}</div>`;
+
+            // Slider Carousel untuk Gambar di Katalog
+            let carouselHTML = `<div class="w-full h-full flex overflow-x-auto carousel-snap hide-scroll" onscroll="handleCarouselScroll(this, '${product.id}-dots')">`;
+            product.images.forEach((img) => {
+                carouselHTML += `<img src="${img}" alt="${product.name}" class="w-full h-full object-cover object-center flex-shrink-0" loading="lazy">`;
+            });
+            carouselHTML += `</div>`;
+
+            let dotsHTML = '';
+            if (product.images.length > 1) {
+                dotsHTML = `<div id="${product.id}-dots" class="absolute bottom-2 left-0 right-0 z-10 flex justify-center gap-1.5 pointer-events-none">`;
+                product.images.forEach((_, idx) => {
+                    dotsHTML += `<span class="w-2 h-2 rounded-full transition-all duration-300 ${idx === 0 ? 'bg-white w-4' : 'bg-white/50'}"></span>`;
+                });
+                dotsHTML += `</div>`;
+            }
+
+            return `
+                <div class="group cursor-pointer">
+                    <div class="relative w-full aspect-[4/5] bg-brand-gray50 mb-3 overflow-hidden">
+                        ${carouselHTML}
+                        ${dotsHTML}
+                        <div class="absolute top-2 left-2 flex flex-col gap-1 z-10 pointer-events-none">
+                            ${badgesHTML}
+                        </div>
+                    </div>
+                    <div onclick="navigate('detail', '${product.id}')">
+                        <h3 class="text-sm text-brand-black font-medium line-clamp-1 group-hover:underline underline-offset-2">${product.name}</h3>
+                        <p class="text-sm mt-1">${priceHTML}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderHome() {
+            const catContainer = document.getElementById('home-categories');
+            catContainer.innerHTML = '';
+            CATEGORIES.filter(c => c.id !== 'all').slice(0, 4).forEach(cat => {
+                const p = PRODUCTS.find(p => p.category === cat.id);
+                const bgImg = p ? p.images[0] : 'https://placehold.co/400x500/F5F5F5/000000?text='+cat.name;
+                
+                catContainer.innerHTML += `
+                    <div class="relative aspect-[3/4] bg-brand-gray50 cursor-pointer group overflow-hidden" onclick="setCategory('${cat.id}'); navigate('catalog');">
+                        <img src="${bgImg}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-300"></div>
+                        <div class="absolute bottom-4 left-4 right-4 text-center">
+                            <h4 class="text-white font-bold tracking-wider uppercase mb-1">${cat.name}</h4>
+                            <span class="text-white/80 text-xs underline underline-offset-4 opacity-0 group-hover:opacity-100 transition-opacity">Shop</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const newContainer = document.getElementById('home-new-arrivals');
+            const newProducts = PRODUCTS.filter(p => p.isNew || p.isReady).slice(0, 4);
+            newContainer.innerHTML = newProducts.map(p => createProductCard(p)).join('');
+        }
+
+        function renderCatalogFilters() {
+            const container = document.getElementById('catalog-categories');
+            container.innerHTML = CATEGORIES.map(cat => `
+                <button onclick="setCategory('${cat.id}')" id="filter-${cat.id}" class="px-4 py-2 text-sm border ${cat.id === currentCategory ? 'border-brand-black bg-brand-black text-white' : 'border-brand-border bg-white text-brand-gray500 hover:border-brand-gray500'} transition-colors whitespace-nowrap">
+                    ${cat.name}
+                </button>
+            `).join('');
+        }
+
+        function setCategory(id) {
+            currentCategory = id;
+            if(!document.getElementById('page-catalog').classList.contains('hidden')){
+                applyFilters();
+            }
+            renderCatalogFilters();
+        }
+
+        function applyFilters() {
+            let filtered = PRODUCTS.filter(p => {
+                const matchCat = currentCategory === 'all' || p.category === currentCategory;
+                const matchSearch = p.name.toLowerCase().includes(searchQuery) || p.description.toLowerCase().includes(searchQuery);
+                return matchCat && matchSearch;
+            });
+
+            const grid = document.getElementById('catalog-grid');
+            const empty = document.getElementById('catalog-empty');
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+            } else {
+                empty.classList.add('hidden');
+                grid.innerHTML = filtered.map(p => createProductCard(p)).join('');
+            }
+            
+            const catName = CATEGORIES.find(c => c.id === currentCategory)?.name || 'All Products';
+            document.getElementById('catalog-subtitle').innerText = searchQuery ? `Search results for "${searchQuery}" in ${catName}` : `Showing ${catName} collection`;
+        }
+
+        function resetFilters() {
+            currentCategory = 'all';
+            searchQuery = '';
+            document.getElementById('searchInput').value = '';
+            renderCatalogFilters();
+            applyFilters();
+        }
+
+        function loadProductDetail(id) {
+            const product = PRODUCTS.find(p => p.id === id);
+            if (!product) return;
+            selectedProduct = product;
+            userSelection = { size: null, color: null };
+
+            document.getElementById('detail-breadcrumb').innerText = product.name;
+            document.getElementById('detail-name').innerText = product.name;
+            document.getElementById('detail-desc').innerText = product.description;
+            document.getElementById('detail-sku').innerText = product.sku;
+            
+            updateDetailStockAndButton();
+
+            const priceEl = document.getElementById('detail-price');
+            const saleEl = document.getElementById('detail-sale-price');
+            if (product.salePrice) {
+                priceEl.innerText = formatRupiah(product.salePrice);
+                saleEl.innerText = formatRupiah(product.price);
+                saleEl.classList.remove('hidden');
+            } else {
+                priceEl.innerText = formatRupiah(product.price);
+                saleEl.classList.add('hidden');
+            }
+
+            document.getElementById('detail-main-img').src = product.images[0];
+            const thumbContainer = document.getElementById('detail-thumbnails');
+            thumbContainer.innerHTML = product.images.map((img, idx) => `
+                <div class="w-16 h-20 sm:w-20 sm:h-24 lg:w-full lg:aspect-[4/5] bg-brand-gray50 shrink-0 cursor-pointer border ${idx === 0 ? 'border-brand-black' : 'border-transparent'} hover:border-brand-gray500 transition-colors" onclick="changeMainImage(this, '${img}')">
+                    <img src="${img}" class="w-full h-full object-cover">
+                </div>
+            `).join('');
+
+            document.getElementById('selected-color-text').innerText = "Not selected";
+            const colorContainer = document.getElementById('detail-colors');
+            colorContainer.innerHTML = product.colors.map(c => `
+                <button onclick="selectVariant('color', '${c}')" class="variant-btn px-4 py-2 text-sm border border-brand-border bg-white text-brand-gray500 hover:border-brand-black transition-colors">
+                    ${c}
+                </button>
+            `).join('');
+
+            const sizeContainer = document.getElementById('detail-sizes');
+            sizeContainer.innerHTML = product.sizes.map(s => `
+                <button onclick="selectVariant('size', '${s}')" class="variant-btn px-4 py-2 text-sm border border-brand-border bg-white text-brand-gray500 hover:border-brand-black transition-colors min-w-[3rem]">
+                    ${s}
+                </button>
+            `).join('');
+        }
+
+        // Fungsi memperbarui Tampilan Stok Berdasarkan Varian Warna & Ukuran Terpilih
+        function updateDetailStockAndButton() {
+            if (!selectedProduct) return;
+
+            let currentStock = 0;
+            let showSpecificVariantStock = false;
+
+            if (selectedProduct.variantStock) {
+                if (userSelection.color && userSelection.size) {
+                    const key = `${userSelection.color}-${userSelection.size}`;
+                    currentStock = selectedProduct.variantStock[key] !== undefined ? selectedProduct.variantStock[key] : 0;
+                    showSpecificVariantStock = true;
+                } else {
+                    currentStock = getProductTotalStock(selectedProduct);
+                }
+            } else {
+                currentStock = selectedProduct.stock || 0;
+            }
+
+            const stockEl = document.getElementById('detail-stock');
+            const btnBuy = document.getElementById('btn-buy-wa');
+
+            if (currentStock <= 0) {
+                stockEl.innerText = showSpecificVariantStock ? "Out of Stock for this variant" : "Out of Stock";
+                stockEl.classList.add('text-red-600');
+                
+                btnBuy.disabled = true;
+                btnBuy.className = "w-full bg-brand-gray500 text-white py-4 flex justify-center items-center gap-2 font-medium cursor-not-allowed";
+                btnBuy.innerHTML = "Out of Stock";
+            } else {
+                stockEl.innerText = showSpecificVariantStock ? `${currentStock} pcs available` : `${currentStock} pcs left (Total)`;
+                stockEl.classList.remove('text-red-600');
+
+                btnBuy.disabled = false;
+                btnBuy.className = "w-full bg-brand-black text-white py-4 flex justify-center items-center gap-2 hover:bg-brand-gray500 transition-colors font-medium cursor-pointer";
+                btnBuy.innerHTML = `<i class="ph-fill ph-whatsapp-logo text-xl"></i> Order via WhatsApp`;
+            }
+        }
+
+        function changeMainImage(element, src) {
+            document.getElementById('detail-main-img').src = src;
+            const siblings = element.parentNode.children;
+            for(let i=0; i<siblings.length; i++){
+                siblings[i].classList.remove('border-brand-black');
+                siblings[i].classList.add('border-transparent');
+            }
+            element.classList.remove('border-transparent');
+            element.classList.add('border-brand-black');
+        }
+
+        function selectVariant(type, value) {
+            userSelection[type] = value;
+            
+            const containerId = type === 'color' ? 'detail-colors' : 'detail-sizes';
+            const buttons = document.getElementById(containerId).getElementsByTagName('button');
+            for(let i=0; i<buttons.length; i++) {
+                buttons[i].classList.remove('selected', 'bg-brand-black', 'text-white', 'border-brand-black');
+                buttons[i].classList.add('bg-white', 'text-brand-gray500', 'border-brand-border');
+                if(buttons[i].innerText.trim() === value) {
+                    buttons[i].classList.remove('bg-white', 'text-brand-gray500', 'border-brand-border');
+                    buttons[i].classList.add('selected', 'bg-brand-black', 'text-white', 'border-brand-black');
+                }
+            }
+
+            if (type === 'color') {
+                document.getElementById('selected-color-text').innerText = value;
+            }
+
+            // Perbarui ketersediaan stok setelah varian dipilih
+            updateDetailStockAndButton();
+        }
+
+        function orderViaWA() {
+            if (!selectedProduct) return;
+            if (selectedProduct.sizes.length > 0 && !userSelection.size) {
+                alert("Please select a size first.");
+                return;
+            }
+            if (selectedProduct.colors.length > 0 && !userSelection.color) {
+                alert("Please select a color first.");
+                return;
+            }
+
+            const price = selectedProduct.salePrice || selectedProduct.price;
+            const message = `Hello ${CONFIG.brandName}, I would like to order:
+
+*${selectedProduct.name}*
+- SKU: ${selectedProduct.sku}
+- Color: ${userSelection.color}
+- Size: ${userSelection.size}
+- Price: ${formatRupiah(price)}
+
+Is it still in stock?`;
+            
+            window.open(getWALink(message), '_blank');
+        }
+
+        window.onload = initApp;
+
+    </script>
+</body>
+</html>
